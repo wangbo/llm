@@ -21,9 +21,9 @@ data_set_name = "lansinuote/ChnSentiCorp"
 # origin len:{'train': (9600, 2), 'validation': (1200, 2), 'test': (1200, 2)}
 
 dataset = load_dataset(data_set_name)
-print("origin len:" + str(dataset.shape))
+# print("origin len:" + str(dataset.shape))
 
-is_truncate_data = True
+is_truncate_data = False
 
 small_train_dataset = dataset['train']
 small_eval_dataset = dataset['test']
@@ -31,12 +31,16 @@ small_eval_dataset = dataset['test']
 if is_truncate_data:
     small_train_dataset = dataset['train'].select(range(1000))
     small_eval_dataset = dataset['test'].select(range(1000))
-    print("cut len, train:" + str(small_train_dataset.shape) +", test:" + str(small_eval_dataset.shape))
+    # print("cut len, train:" + str(small_train_dataset.shape) +", test:" + str(small_eval_dataset.shape))
 
-
-# mode_name = "google-bert/bert-base-cased"
+# print(type(small_train_dataset))
+# print(small_train_dataset)
+# print("-------------")
+# print(type(small_train_dataset.features))
+# print(type(small_train_dataset.features['text']))
+mode_name = "google-bert/bert-base-cased"
 mode_name = "bert-base-chinese"
-
+#
 tokenizer = AutoTokenizer.from_pretrained(mode_name)
 def tokenize_function(examples):
     return tokenizer(examples["text"], padding="max_length", truncation=True)
@@ -44,7 +48,7 @@ def tokenize_function(examples):
 token_small_train_dataset = small_train_dataset.map(tokenize_function, batched=True)
 token_small_eval_dataset = small_eval_dataset.map(tokenize_function, batched=True)
 
-# print(token_small_eval_dataset[0])
+print(token_small_eval_dataset[0])
 
 model = AutoModelForSequenceClassification.from_pretrained(mode_name, num_labels=5)
 
