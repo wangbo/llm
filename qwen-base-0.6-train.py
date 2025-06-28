@@ -1,3 +1,4 @@
+import transformers
 from peft import LoraConfig
 
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
@@ -6,6 +7,8 @@ from datasets import load_dataset
 from trl import SFTConfig, SFTTrainer
 
 # https://huggingface.co/docs/trl/sft_trainer
+
+print("ts version: " + str(transformers.__version__))
 
 model_name = "Qwen/Qwen3-0.6B-Base"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
