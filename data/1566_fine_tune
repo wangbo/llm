@@ -1,4 +1,5 @@
 [
+{"messages": [{"role": "user", "content": "大明王朝1566的作者是谁？"}, {"role": "assistant", "content": "刘和平。"}]},
 {"messages": [{"role": "user", "content": "海瑞升任淳安知县后首遇何事？"}, {"role": "assistant", "content": "改稻为桑政策推行，百姓抗拒，官场腐败暴露。"}]},
 {"messages": [{"role": "user", "content": "裕王的政治立场如何？"}, {"role": "assistant", "content": "反对严党，支持清流，试图改革弊政。"}]},
 {"messages": [{"role": "user", "content": "嘉靖如何平衡各方势力？"}, {"role": "assistant", "content": "利用严党与清流互相牵制，自己掌控全局。"}]},

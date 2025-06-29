@@ -13,31 +13,44 @@ print("ts version: " + str(transformers.__version__))
 model_name = "Qwen/Qwen3-0.6B-Base"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-origin_data_set = load_dataset(
+# 1 load data
+raw_ds = load_dataset(
     "json",
-    data_files = {"train": "/Users/wangbo/Desktop/1566_fine_tune"},
-    split = "train"
+    # data_files = {"train": "C:\\Users\\root\\Downloads\\cat.json"},
+    data_files= {"train" : "C:\\git\\llm\\data\\1566_fine_tune"},
+    split = "train",
+    encoding='utf-8'
 )
 
-dataset = []
-# {"role": "user",      "content": item['messages'][0]['content'] + " /no_think"},
-# {"role": "assistant", "content": "<think>\n\n</think>\n\n" +item['messages'][1]['content']},
-for item in origin_data_set:
-    dataset.append({"messages": [
-        {"role": "system", "content": "You are helpful"},
-        {"role": "user", "content": item['messages'][0]['content']},
-        {"role": "assistant", "content": item['messages'][1]['content']}
-        ]
-    })
+all_convos = []
+for item in raw_ds:
+    new_convo = []
+    x0 = {"role": item['messages'][0]['role'], "content": item['messages'][0]['content']}
+    x1 = {"role": item['messages'][1]['role'], "content": item['messages'][1]['content']}
+    new_convo.append(x0)
+    new_convo.append(x1)
+    all_convos.append(new_convo)
 
-dataset = Dataset.from_list(dataset)
+# 2 train
+token_dataset = tokenizer.apply_chat_template(
+    all_convos,
+    tokenize = False,
+)
+
+print(len(token_dataset))
+print(token_dataset[0])
+
+token_dataset = Dataset.from_dict({'text':token_dataset})
 
 lora_config = LoraConfig(
-    r=16,
-    lora_alpha=32,
-    lora_dropout=0.05,
+    r=4,
+    # lora_alpha=32,
+    lora_alpha=16,
+    # lora_dropout=0.05,
+    lora_dropout=0.1,
     # target_modules="[all-linear]",
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+    # target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+    target_modules=["q_proj", "v_proj"],
     modules_to_save=["lm_head", "embed_token"],
     task_type="CAUSAL_LM",
     bias="none",
@@ -45,14 +58,11 @@ lora_config = LoraConfig(
 
 sft_args = SFTConfig(
     # packing=True
-    num_train_epochs=1,
+    num_train_epochs=64,
     per_device_eval_batch_size=1,
     per_device_train_batch_size=1,
     learning_rate=1e-5,
-    bf16=False, #for mac,
-    model_init_kwargs={
-        "torch_dtype": "float32" # for mac
-    }
+    # learning_rate=5e-6,
 )
 
 model = AutoModelForCausalLM.from_pretrained(
@@ -63,11 +73,15 @@ model = AutoModelForCausalLM.from_pretrained(
 
 trainer = SFTTrainer(
     model,
-    train_dataset=dataset,
+    train_dataset=token_dataset,
     args=sft_args,
     peft_config=lora_config
 )
 
+save_path = "./saved/qw-06-lora"
 trainer.train()
+
+trainer.model.save_pretrained(save_path, safe_serialization=False)
+tokenizer.save_pretrained(save_path)
 
 
